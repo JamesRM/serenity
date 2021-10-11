@@ -9,6 +9,17 @@ PHDRS
 
 SECTIONS
 {
+    /*
+        FIXME: 8MB is enough space for all of the tables required to idntity map 
+               phycial memory. 8M is wasteful, so this should be properly calculated.
+    */
+    page_tables_size = 8M; 
+    page_tables_phys_start = (end_of_bss + 4K) & ~(4k -1);
+    page_tables_phys_end = page_tables_phys_start + page_tables_size;
+
+    stack_start = page_tables_phys_end;
+    stack_end = stack_start + 1K;
+
     . = 0x00080000;
 
     .text ALIGN(4K) : AT (ADDR(.text))

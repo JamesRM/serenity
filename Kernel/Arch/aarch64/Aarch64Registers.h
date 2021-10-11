@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2021, James Mintram <me@jamesrm.com>
  * Copyright (c) 2021, Marcin Undak <mcinek@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -6,7 +7,125 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace Kernel {
+
+// https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/ID-AA64MMFR0-EL1--AArch64-Memory-Model-Feature-Register-0
+// Memory Model Feature Register 0
+struct Aarch64_ID_AA64MMFR0_EL1 {
+    int PARange : 4;
+    int ASIDBits : 4;
+    int BigEnd : 4;
+    int SNSMem : 4;
+    int BigEndEL0 : 4;
+    int TGran16 : 4;
+    int TGran64 : 4;
+    int TGran4 : 4;
+    int TGran16_2 : 4;
+    int TGran64_2 : 4;
+    int TGran4_2 : 4;
+    int ExS : 4;
+    int RES0 : 8;
+    int FGT : 4;
+    int ECV : 4;
+};
+
+// https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/TCR-EL1--Translation-Control-Register--EL1-
+// Translation Control Register
+struct Aarch64_TCR_EL1 {
+
+    enum Shareability {
+        NonSharable = 0b00,
+        OuterShareable = 0b10,
+        InnerShareable = 0b11,
+    };
+    enum OuterCacheability {
+        NormalMemory_Outer_NonCacheable = 0b00,
+        NormalMemory_Outer_WriteBack_ReadAllocate_WriteAllocateCacheable = 0b01,
+        NormalMemory_Outer_WriteThrough_ReadAllocate_NoWriteAllocateCacheable = 0b10,
+        NormalMemory_Outer_WriteBack_ReadAllocate_NoWriteAllocateCacheable = 0b11,
+    };
+    enum InnerCacheability {
+        NormalMemory_Inner_NonCacheable = 0b00,
+        NormalMemory_Inner_WriteBack_ReadAllocate_WriteAllocateCacheable = 0b01,
+        NormalMemory_Inner_WriteThrough_ReadAllocate_NoWriteAllocateCacheable = 0b10,
+        NormalMemory_Inner_WriteBack_ReadAllocate_NoWriteAllocateCacheable = 0b11,
+    };
+
+    // In AArch64, you have 3 possible translation granules to choose from,
+    // each of which results in a different set of page sizes:
+    // - 4KB granule: 4KB, 2MB, and 1GB pages.
+    // - 16KB granule: 16KB and 32MB pages.
+    // - 64KB granule: 64KB and 512MB pages.
+    //
+    // (https://stackoverflow.com/a/34269498)
+
+    enum TG1GranuleSize {
+        TG1_Size_16KB = 0b01,
+        TG1_Size_4KB = 0b10,
+        TG1_Size_64KB = 0b11,
+    };
+
+    enum TG0GranuleSize {
+        TG0_Size_4KB = 0b00,
+        TG0_Size_64KB = 0b01,
+        TG0_Size_16KB = 0b10,
+    };
+
+    int T0SZ : 6;
+    int RES0_0 : 1;
+    int EPD0 : 1;
+    InnerCacheability IRGN0 : 2;
+    OuterCacheability ORGN0 : 2;
+    Shareability SH0 : 2;
+    TG0GranuleSize TG0 : 2;
+
+    int T1SZ : 6;
+    int A1 : 1;
+    int EPD1 : 1;
+    InnerCacheability IRGN1 : 2;
+    OuterCacheability ORGN1 : 2;
+    Shareability SH1 : 2;
+    TG1GranuleSize TG1 : 2;
+
+    int IPS : 3;
+    int RES0_1 : 1;
+    int AS : 1;
+    int TBI0 : 1;
+    int TBI1 : 1;
+    int HA : 1;
+    int HD : 1;
+    int HPD0 : 1;
+    int HPD1 : 1;
+    int HWU059 : 1;
+    int HWU060 : 1;
+    int HWU061 : 1;
+    int HWU062 : 1;
+
+    int HWU159 : 1;
+    int HWU160 : 1;
+    int HWU161 : 1;
+    int HWU162 : 1;
+
+    int TBID0 : 1;
+    int TBID1 : 1;
+    int NFD0 : 1;
+    int NFD1 : 1;
+
+    int E0PD0 : 1;
+    int E0PD1 : 1;
+    int TCMA0 : 1;
+    int TCMA1 : 1;
+    int DS : 1;
+    int RES0_2 : 4;
+
+    static Aarch64_TCR_EL1 Default();
+};
+static_assert(sizeof(Aarch64_TCR_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0595/2021-03/AArch64-Registers/SCTLR-EL1--System-Control-Register--EL1-
+// System Control Register
 struct Aarch64_SCTLR_EL1 {
     int M : 1;
     int A : 1;
@@ -57,9 +176,13 @@ struct Aarch64_SCTLR_EL1 {
     int EnALS : 1;
     int EPAN : 1;
     int _reserved58 : 6 = 0;
+
+    static Aarch64_SCTLR_EL1 Default();
 };
 static_assert(sizeof(Aarch64_SCTLR_EL1) == 8);
 
+// https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/HCR-EL2--Hypervisor-Configuration-Register
+// Hypervisor Configuration Register
 struct Aarch64_HCR_EL2 {
     int VM : 1;
     int SWIO : 1;
@@ -108,6 +231,8 @@ struct Aarch64_HCR_EL2 {
 };
 static_assert(sizeof(Aarch64_HCR_EL2) == 8);
 
+// https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/SCR-EL3--Secure-Configuration-Register
+// Secure Configuration Register
 struct Aarch64_SCR_EL3 {
     int NS : 1;
     int IRQ : 1;
@@ -181,6 +306,8 @@ struct Aarch64_SPSR_EL2 {
 };
 static_assert(sizeof(Aarch64_SPSR_EL2) == 8);
 
+// https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/SPSR-EL3--Saved-Program-Status-Register--EL3-
+// Saved Program Status Register
 struct Aarch64_SPSR_EL3 {
     enum Mode : uint16_t {
         EL0t = 0b0000,
@@ -212,4 +339,13 @@ struct Aarch64_SPSR_EL3 {
     int _reserved32 : 32 = 0;
 };
 static_assert(sizeof(Aarch64_SPSR_EL3) == 8);
+
+// https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/MAIR-EL1--Memory-Attribute-Indirection-Register--EL1-?lang=en#fieldset_0-63_0
+// Memory Attribute Indirection Register
+struct Aarch64_MAIR_EL1 {
+    typedef uint8_t AttributeEncoding;
+    AttributeEncoding Attr[8];
+};
+static_assert(sizeof(Aarch64_MAIR_EL1) == 8);
+
 }
