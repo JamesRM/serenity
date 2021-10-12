@@ -116,12 +116,16 @@ struct [[gnu::packed]] RegisterState {
     }
 };
 
+
+
 #if ARCH(I386)
 #    define REGISTER_STATE_SIZE (19 * 4)
-#else
+     static_assert(AssertSize<RegisterState, REGISTER_STATE_SIZE>());
+#elif ARCH(X86_64)
 #    define REGISTER_STATE_SIZE (22 * 8)
+     static_assert(AssertSize<RegisterState, REGISTER_STATE_SIZE>());
 #endif
-static_assert(AssertSize<RegisterState, REGISTER_STATE_SIZE>());
+
 
 inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, const RegisterState& kernel_regs)
 {
