@@ -6,7 +6,7 @@
 
 #include <Kernel/Prekernel/Arch/aarch64/Aarch64Asm.h>
 #include <Kernel/Prekernel/Arch/aarch64/AarchRegisters.h>
-//#include <Kernel/Prekernel/Arch/aarch64/aarch64_mmu.h>
+#include <Kernel/Prekernel/Arch/aarch64/UART.h>
 
 #define TABLE_SHIFT 9                     //9 bits of address space per table (512 entries)
 #define PAGE_SHIFT 12                     //4096 bytes per page - lower 12 bits
@@ -128,8 +128,17 @@ void activate_mmu()
 void init_prekernel_page_tables();
 void init_prekernel_page_tables()
 {
+    auto& uart = Prekernel::UART::the();
+
+    uart.print_str("zero_identity_map\n");
     zero_identity_map(page_tables_phys_start);
+
+    uart.print_str("build_identity_map\n");
     build_identity_map(page_tables_phys_start);
+
+    uart.print_str("switch_to_page_table\n");
     switch_to_page_table(page_tables_phys_start);
+
+    uart.print_str("activate_mmu\n");
     activate_mmu();
 }
