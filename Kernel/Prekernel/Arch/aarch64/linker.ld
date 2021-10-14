@@ -36,3 +36,7 @@ SECTIONS
 }
 
 size_of_bss_divided_by_8 = (end_of_bss - start_of_bss) / 8;
+
+page_tables_size = ((3 + 512) * 0x1000);
+page_tables_phys_start = (end_of_bss + 4K) & ~(4k -1);
+page_tables_phys_end = page_tables_phys_start + page_tables_size;
