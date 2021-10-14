@@ -1,6 +1,6 @@
 name: Build, lint, and test
 
-on: [push, pull_request]
+on: [workflow_dispatch, push, pull_request]
 
 env:
   # Don't mix these up!
@@ -12,7 +12,7 @@ concurrency:
   group: ${{ github.head_ref || format('{0}-{1}', github.ref, github.run_number) }}
   cancel-in-progress: true
 
-jobs:
+jobs: 
   build_and_test_serenity:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -206,3 +206,18 @@ jobs:
         if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         run: '[ ! -e debug.log ] || cat debug.log'
+      
+      - name: Build Aarch64 kernel
+        working-directory: ${{ github.workspace }}
+        # Aarch64 kernel build is only triggered at the end of the the x86_64 build so save CI
+        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' && matrix.arch == 'x86_64'}}
+        run:  |
+          cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
+            -DSERENITY_ARCH=aarch64 \
+            -DSERENITY_TOOLCHAIN=GNU \
+            -DCMAKE_C_COMPILER=gcc-10 \
+            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DENABLE_UNDEFINED_SANITIZER=ON \
+            -DENABLE_PCI_IDS_DOWNLOAD=OFF \
+            -DENABLE_USB_IDS_DOWNLOAD=OFF
+        
