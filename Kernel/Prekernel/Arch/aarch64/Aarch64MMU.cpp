@@ -6,7 +6,25 @@
 
 #include <Kernel/Prekernel/Arch/aarch64/Aarch64Asm.h>
 #include <Kernel/Prekernel/Arch/aarch64/AarchRegisters.h>
-#include <Kernel/Prekernel/Arch/aarch64/aarch64_mmu.h>
+//#include <Kernel/Prekernel/Arch/aarch64/aarch64_mmu.h>
+
+#define TABLE_SHIFT 9                     //9 bits of address space per table (512 entries)
+#define PAGE_SHIFT 12                     //4096 bytes per page - lower 12 bits
+#define SECTION_SHIFT PAGE_SHIFT          //Bits remaining for the offset within a 2MB section (21 for 2MB, 12 for 4k)
+#define SECTION_SIZE (1 << SECTION_SHIFT) //21 Bits of address = 2MB, 9 Bits of address = 4k
+
+#define TABLE_SIZE 0x1000
+
+#define MM_TABLE_DESCRIPTOR 0b11
+
+#define MM_ACCESS (0x1 << 10)
+
+// shareability
+#define PT_OSH (2 << 8) // outter shareable
+#define PT_ISH (3 << 8) // inner shareable
+
+#define PT_MEM (0 << 2) // normal memory
+#define PT_DEV (1 << 2) // device memory
 
 extern size_t page_tables_size;
 
@@ -107,7 +125,8 @@ void activate_mmu()
     flush();
 }
 
-void init_prekernel_page_table()
+void init_prekernel_page_tables();
+void init_prekernel_page_tables()
 {
     zero_identity_map(page_tables_phys_start);
     build_identity_map(page_tables_phys_start);

@@ -11,9 +11,9 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/MMIO.cpp
         Arch/aarch64/Timer.cpp
         Arch/aarch64/UART.cpp
-        Arch/aarch64/aarch64_mmu.cpp
         Arch/aarch64/AarchRegisters.cpp
         Arch/aarch64/Aarch64_asm_utils.S
+        Arch/aarch64/Aarch64MMU.cpp
         Arch/aarch64/boot.S
         Arch/aarch64/init.cpp
     )
