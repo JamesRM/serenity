@@ -29,7 +29,7 @@
 extern size_t page_tables_size;
 
 typedef unsigned char* t_page_table;
-extern t_page_table page_tables_phys_start;
+extern unsigned char page_tables_phys_start;
 
 void zero_identity_map(t_page_table page_table);
 void build_identity_map(t_page_table page_table);
@@ -37,39 +37,48 @@ void activate_mmu();
 void init_prekernel_page_table();
 void switch_to_page_table(t_page_table page_table);
 
-void zero_identity_map(t_page_table page_table)
+__attribute__((no_sanitize("undefined"))) void zero_identity_map(t_page_table page_table)
 {
     // Memset all page table memory to zero
-    for (unsigned char* p = page_table;
-         p < page_table + page_tables_size;
+    for (uint64_t* p = (uint64_t*)page_table;
+         p < (uint64_t*)(page_table + page_tables_size);
          p++) {
+
         *p = 0;
     }
 }
 
+//__attribute__((no_sanitize("undefined")))
 void build_identity_map(t_page_table page_table)
 {
+    auto& uart = Prekernel::UART::the();
+
+    uart.print_str("PGD\r\n");
+
     // Setup first entry of PGD
     uint64_t* pgd_entry = (uint64_t*)page_table;
     *pgd_entry = (uint64_t)&page_table[TABLE_SIZE];
     *pgd_entry |= MM_TABLE_DESCRIPTOR;
 
+    uart.print_str("PUG\r\n");
     // Setup first entry of PUD
     uint64_t* pug_entry = (uint64_t*)&page_table[TABLE_SIZE];
     *pug_entry = (uint64_t)&page_table[TABLE_SIZE * 2];
     *pug_entry |= MM_TABLE_DESCRIPTOR;
 
+    uart.print_str("L3\r\n");
     // Setup L3 entries
     for (uint32_t l3_idx = 0; l3_idx < 512; l3_idx++) {
-        uint64_t* l3_entry = (uint64_t*)&page_table[TABLE_SIZE * 2 + l3_idx];
+        uint64_t* l3_entry = (uint64_t*)&page_table[TABLE_SIZE * 2 + (l3_idx * sizeof(uint64_t))];
 
-        *l3_entry = (uint64_t)&page_table[TABLE_SIZE * 2] + (l3_idx * TABLE_SIZE);
+        *l3_entry = (uint64_t)(page_table + (TABLE_SIZE * 2) + (l3_idx * TABLE_SIZE));
         *l3_entry |= MM_TABLE_DESCRIPTOR;
     }
 
+    uart.print_str("PGL4\r\n");
     // Setup L4 entries
     for (size_t idx = 0, addr = 0; addr < 0x3F000000; addr += SECTION_SIZE, idx++) {
-        uint64_t* l4_entry = (uint64_t*)&page_table[TABLE_SIZE * 3 + idx];
+        uint64_t* l4_entry = (uint64_t*)&page_table[TABLE_SIZE * 3 + (idx * sizeof(uint64_t))];
 
         *l4_entry = addr;
         *l4_entry |= MM_ACCESS;
@@ -77,9 +86,10 @@ void build_identity_map(t_page_table page_table)
         *l4_entry |= PT_ISH;
     }
 
+    uart.print_str("Device\r\n");
     // Setup entries for last 16MB of memory (MMIO)
     for (size_t idx = 0, addr = 0x3F000000; addr < 0x3EFFFFFF; addr += SECTION_SIZE, idx++) {
-        uint64_t* l4_entry = (uint64_t*)&page_table[TABLE_SIZE * 3 + idx];
+        uint64_t* l4_entry = (uint64_t*)&page_table[TABLE_SIZE * 3 + (idx * sizeof(uint64_t))];
 
         *l4_entry = addr;
         *l4_entry |= MM_ACCESS;
@@ -130,15 +140,15 @@ void init_prekernel_page_tables()
 {
     auto& uart = Prekernel::UART::the();
 
-    uart.print_str("zero_identity_map\n");
-    zero_identity_map(page_tables_phys_start);
+    uart.print_str("zero_identity_map\r\n");
+    zero_identity_map(&page_tables_phys_start);
 
-    uart.print_str("build_identity_map\n");
-    build_identity_map(page_tables_phys_start);
+    // uart.print_str("build_identity_map\r\n");
+    // build_identity_map(&page_tables_phys_start);
 
-    uart.print_str("switch_to_page_table\n");
-    switch_to_page_table(page_tables_phys_start);
+    uart.print_str("switch_to_page_table\r\n");
+    switch_to_page_table(&page_tables_phys_start);
 
-    uart.print_str("activate_mmu\n");
+    uart.print_str("activate_mmu\r\n");
     activate_mmu();
 }

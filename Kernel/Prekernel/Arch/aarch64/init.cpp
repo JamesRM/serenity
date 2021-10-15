@@ -28,7 +28,7 @@ extern "C" [[noreturn]] void init()
 {
     auto& uart = Prekernel::UART::the();
 
-    uart.print_str("Init prekernel page tables\n");
+    uart.print_str("\r\nInit prekernel page tables\r\n");
     init_prekernel_page_tables();
 
     // Enable caching
