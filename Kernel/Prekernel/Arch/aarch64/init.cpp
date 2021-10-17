@@ -7,6 +7,7 @@
 
 #include <AK/Types.h>
 
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Arch/aarch64/Asm.h>
 #include <Kernel/Prekernel/Arch/aarch64/Aarch64_asm_utils.h>
 #include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
@@ -15,6 +16,13 @@
 #include <Kernel/Prekernel/Arch/aarch64/UART.h>
 
 extern "C" void wait_cycles(int n);
+
+void try_lock();
+void try_lock()
+{
+    Kernel::Spinlock lock;
+    lock.lock();
+}
 
 extern "C" [[noreturn]] void init();
 extern "C" [[noreturn]] void init()
@@ -39,6 +47,8 @@ extern "C" [[noreturn]] void init()
 
     uart.print_str("Initialize MMU\r\n");
     Prekernel::init_prekernel_page_tables();
+
+    try_lock();
 
     uart.print_str("Enter loop\r\n");
     auto& timer = Prekernel::Timer::the();

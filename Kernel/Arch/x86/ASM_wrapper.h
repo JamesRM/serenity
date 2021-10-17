@@ -8,6 +8,8 @@
 
 #include <AK/Types.h>
 
+#error "DO NOT INCLUDE"
+
 namespace Kernel {
 
 ALWAYS_INLINE void cli()

@@ -23,8 +23,8 @@ extern "C" {
 [[noreturn]] void abort();
 }
 
-#define VERIFY_INTERRUPTS_DISABLED() VERIFY(!(cpu_flags() & 0x200))
-#define VERIFY_INTERRUPTS_ENABLED() VERIFY(cpu_flags() & 0x200)
+#define VERIFY_INTERRUPTS_DISABLED() true //VERIFY(!(cpu_flags() & 0x200))
+#define VERIFY_INTERRUPTS_ENABLED() true  //VERIFY(cpu_flags() & 0x200)
 
 static constexpr bool TODO = false;
 #define TODO() VERIFY(TODO)
