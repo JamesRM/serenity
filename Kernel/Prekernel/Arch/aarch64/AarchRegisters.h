@@ -6,7 +6,86 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace Kernel {
+
+// https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/TCR-EL1--Translation-Control-Register--EL1-
+// Translation Control Register
+struct Aarch64_TCR_EL1 {
+   
+    enum Shareability {
+        NonSharable = 0b00,
+        OuterShareable = 0b10,
+        InnerShareable = 0b11,
+    };
+    enum OuterCacheability {
+        NormalMemory_Outer_NonCacheable = 0b00,
+        NormalMemory_Outer_WriteBack_ReadAllocate_WriteAllocateCacheable = 0b01,
+        NormalMemory_Outer_WriteThrough_ReadAllocate_NoWriteAllocateCacheable = 0b10,
+        NormalMemory_Outer_WriteBack_ReadAllocate_NoWriteAllocateCacheable = 0b11,
+    };
+    enum InnerCacheability {
+        NormalMemory_Inner_NonCacheable = 0b00,
+        NormalMemory_Inner_WriteBack_ReadAllocate_WriteAllocateCacheable = 0b01,
+        NormalMemory_Inner_WriteThrough_ReadAllocate_NoWriteAllocateCacheable = 0b10,
+        NormalMemory_Inner_WriteBack_ReadAllocate_NoWriteAllocateCacheable = 0b11,
+    };
+
+    int T0SZ : 6;
+    int RES0_0	 : 1;
+    int EPD0	 : 1;
+    InnerCacheability IRGN0 : 2;
+    OuterCacheability ORGN0 : 2;
+    Shareability SH0	 : 2;
+    int TG0	 : 2;
+
+
+    int T1SZ : 6;
+    int A1	 : 1;
+    int EPD1 : 1;
+    InnerCacheability IRGN1 : 2;
+    OuterCacheability ORGN1 : 2;
+    Shareability SH1 : 2;
+    int TG1	 : 2;
+
+
+
+    int IPS : 3;
+    int RES0_1	 : 1;
+    int AS : 1;
+    int TBI0 : 1;
+    int TBI1 : 1;
+    int HA : 1;
+    int HD : 1;
+    int HPD0 : 1;
+    int HPD1 : 1;
+    int HWU059	 : 1;
+    int HWU060	 : 1;
+    int HWU061	 : 1;
+    int HWU062	 : 1;
+
+    int HWU159 : 1;
+    int HWU160	 : 1;
+    int HWU161	 : 1;
+    int HWU162	 : 1;
+
+    int TBID0 : 1;
+    int TBID1 : 1;
+    int NFD0 : 1;
+    int NFD1 : 1;
+
+    int E0PD0 : 1;
+    int E0PD1 : 1;
+    int TCMA0 : 1;
+    int TCMA1 : 1;
+    int DS : 1;
+    int RES0_2 : 4;
+};
+static_assert(sizeof(Aarch64_TCR_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0595/2021-03/AArch64-Registers/SCTLR-EL1--System-Control-Register--EL1-
+// System Control Register
 struct Aarch64_SCTLR_EL1 {
     int M : 1;
     int A : 1;
@@ -108,6 +187,8 @@ struct Aarch64_HCR_EL2 {
 };
 static_assert(sizeof(Aarch64_HCR_EL2) == 8);
 
+// https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/SCR-EL3--Secure-Configuration-Register
+// Secure Configuration Register
 struct Aarch64_SCR_EL3 {
     int NS : 1;
     int IRQ : 1;
@@ -181,6 +262,8 @@ struct Aarch64_SPSR_EL2 {
 };
 static_assert(sizeof(Aarch64_SPSR_EL2) == 8);
 
+// https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/SPSR-EL3--Saved-Program-Status-Register--EL3-
+// Saved Program Status Register
 struct Aarch64_SPSR_EL3 {
     enum Mode : uint16_t {
         EL0t = 0b0000,
@@ -212,4 +295,13 @@ struct Aarch64_SPSR_EL3 {
     int _reserved32 : 32 = 0;
 };
 static_assert(sizeof(Aarch64_SPSR_EL3) == 8);
+
+// https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/MAIR-EL1--Memory-Attribute-Indirection-Register--EL1-?lang=en#fieldset_0-63_0
+// Memory Attribute Indirection Register
+struct Aarch64_MAIR_EL1
+{
+    typedef uint8_t AttributeEncoding;
+    AttributeEncoding Attr[8];
+};
+static_assert(sizeof(Aarch64_MAIR_EL1) == 8);
 }

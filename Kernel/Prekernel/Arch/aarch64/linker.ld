@@ -9,6 +9,13 @@ PHDRS
 
 SECTIONS
 {
+    page_tables_size = ((3 + 512) * 0x1000);
+    page_tables_phys_start = (end_of_bss + 4K) & ~(4k -1);
+    page_tables_phys_end = page_tables_phys_start + page_tables_size;
+
+    stack_start = page_tables_phys_end;
+    stack_end = stack_start + 1K;
+
     . = 0x00080000;
 
     .text ALIGN(4K) : AT (ADDR(.text))

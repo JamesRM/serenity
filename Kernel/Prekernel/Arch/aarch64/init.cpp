@@ -11,6 +11,8 @@
 #include <Kernel/Prekernel/Arch/aarch64/Timer.h>
 #include <Kernel/Prekernel/Arch/aarch64/UART.h>
 
+extern void init_prekernel_page_tables();
+
 extern "C" [[noreturn]] void halt();
 extern "C" [[noreturn]] void init();
 extern "C" [[noreturn]] void os_start();
@@ -25,6 +27,12 @@ static void print_current_exception_level(const char* msg);
 extern "C" [[noreturn]] void init()
 {
     auto& uart = Prekernel::UART::the();
+
+    uart.print_str("\r\nInit prekernel page tables\r\n");
+    init_prekernel_page_tables();
+
+    // Enable caching
+    // Installing exception handlers..
 
     uart.print_str("\r\nWelcome to Serenity OS!\r\n");
     uart.print_str("Imagine this being your ideal operating system.\r\n");

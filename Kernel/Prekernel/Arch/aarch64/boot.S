@@ -18,7 +18,7 @@ start:
   // Let stack start before .text for now.
   // 512 kiB (0x80000) of stack are probably not sufficient, especially once we give the other cores some stack too,
   // but for now it's ok.
-  ldr x14, =start
+  adrp x14, stack_start
   mov sp, x14
 
   // Clear BSS.
