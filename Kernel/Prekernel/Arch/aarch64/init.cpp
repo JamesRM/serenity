@@ -14,7 +14,6 @@
 #include <Kernel/Prekernel/Arch/aarch64/Timer.h>
 #include <Kernel/Prekernel/Arch/aarch64/UART.h>
 
-extern "C" [[noreturn]] void halt();
 extern "C" void wait_cycles(int n);
 
 extern "C" [[noreturn]] void init();
@@ -60,19 +59,12 @@ extern size_t __stack_chk_guard;
 size_t __stack_chk_guard;
 extern "C" [[noreturn]] void __stack_chk_fail();
 
-[[noreturn]] void halt()
-{
-    for (;;) {
-        asm volatile("wfi");
-    }
-}
-
 void __stack_chk_fail()
 {
-    halt();
+    Prekernel::halt();
 }
 
 [[noreturn]] void __assertion_failed(char const*, char const*, unsigned int, char const*)
 {
-    halt();
+    Prekernel::halt();
 }

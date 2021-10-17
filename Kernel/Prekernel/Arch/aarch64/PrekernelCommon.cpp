@@ -19,7 +19,14 @@ namespace Prekernel {
         uart.print_str(msg);
     }
 
-    Kernel::halt();
+    Prekernel::halt();
+}
+
+[[noreturn]] void halt()
+{
+    for (;;) {
+        asm volatile("wfi");
+    }
 }
 
 }
