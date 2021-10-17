@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/aarch64/Aarch64Asm.h>
+#include <Kernel/Arch/aarch64/Asm.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Prekernel/Arch/aarch64/Aarch64_asm_utils.h>
 #include <Kernel/Prekernel/Arch/aarch64/Prekernel.h>
@@ -82,7 +82,7 @@ static void set_up_el1()
 
 void drop_to_exception_level_1()
 {
-    switch (Kernel::get_current_exception_level()) {
+    switch (Kernel::Aarch64::Asm::get_current_exception_level()) {
     case 3:
         drop_to_el2();
         [[fallthrough]];

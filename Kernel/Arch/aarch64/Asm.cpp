@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/aarch64/Aarch64Asm.h>
+#include <Kernel/Arch/aarch64/Asm.h>
 #include <Kernel/Prekernel/Arch/aarch64/UART.h>
 
-namespace Kernel {
+namespace Kernel::Aarch64::Asm {
 
-Aarch64_ExceptionLevel get_current_exception_level()
+ExceptionLevel get_current_exception_level()
 {
-    Aarch64_ExceptionLevel current_exception_level;
+    ExceptionLevel current_exception_level;
 
     asm("mrs  %[value], CurrentEL"
         : [value] "=r"(current_exception_level));

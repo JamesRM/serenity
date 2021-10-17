@@ -23,7 +23,7 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/Aarch64_asm_utils.S
 
         # Shared with kernel
-        ../Arch/aarch64/Aarch64Asm.cpp
+        ../Arch/aarch64/Asm.cpp
         ../Arch/aarch64/Registers.cpp
     )
 else()
