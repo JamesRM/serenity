@@ -187,12 +187,24 @@ static void activate_mmu()
     Aarch64::Asm::flush();
 }
 
+static void enable_caching()
+{
+    // Enable MMU in the system control register
+    Aarch64_SCTLR_EL1 sctlr_el1 = Aarch64_SCTLR_EL1::Read();
+    sctlr_el1.C = 1;
+    sctlr_el1.I = 1;
+    Aarch64_SCTLR_EL1::Write(sctlr_el1);
+
+    flush();
+}
+
 void init_prekernel_page_tables()
 {
     PageBumpAllocator allocator((uint64_t*)page_tables_phys_start, (uint64_t*)page_tables_phys_end);
     build_identity_map(allocator);
     switch_to_page_table(page_tables_phys_start);
     activate_mmu();
+    enable_caching();
 }
 
 }
