@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/aarch64/Aarch64Registers.h>
+#include <Kernel/Arch/aarch64/Registers.h>
 
-namespace Kernel {
+namespace Kernel::Aarch64 {
 
-Aarch64_TCR_EL1 Aarch64_TCR_EL1::Default()
+TCR_EL1 TCR_EL1::Default()
 {
     return {};
 }
-Aarch64_SCTLR_EL1 Aarch64_SCTLR_EL1::Default()
+SCTLR_EL1 SCTLR_EL1::Default()
 {
-    Aarch64_SCTLR_EL1 system_control_register_el1 = {};
+    SCTLR_EL1 system_control_register_el1 = {};
     system_control_register_el1.LSMAOE = 1;
     system_control_register_el1.nTLSMD = 1;
     system_control_register_el1.SPAN = 1;

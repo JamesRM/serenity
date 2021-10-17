@@ -24,7 +24,7 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
 
         # Shared with kernel
         ../Arch/aarch64/Aarch64Asm.cpp
-        ../Arch/aarch64/Aarch64Registers.cpp
+        ../Arch/aarch64/Registers.cpp
     )
 else()
     set(SOURCES
