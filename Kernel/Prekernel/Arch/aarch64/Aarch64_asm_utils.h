@@ -6,7 +6,6 @@
 
 #pragma once
 
-extern "C" uint8_t get_current_exception_level();
 extern "C" void wait_cycles(int n);
 
 // CPU initialization functions

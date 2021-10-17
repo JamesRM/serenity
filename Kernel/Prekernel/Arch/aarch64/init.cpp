@@ -7,6 +7,7 @@
 
 #include <AK/Types.h>
 
+#include <Kernel/Arch/aarch64/Aarch64Asm.h>
 #include <Kernel/Prekernel/Arch/aarch64/Aarch64_asm_utils.h>
 #include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
 #include <Kernel/Prekernel/Arch/aarch64/Prekernel.h>
@@ -31,7 +32,7 @@ extern "C" [[noreturn]] void init()
     uart.print_str("\r\n");
 
     uart.print_str("CPU started in: EL");
-    uart.print_num(get_current_exception_level());
+    uart.print_num(Kernel::get_current_exception_level());
     uart.print_str("\r\n");
 
     uart.print_str("Drop CPU to EL1\r\n");
