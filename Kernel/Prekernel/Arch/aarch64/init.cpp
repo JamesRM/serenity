@@ -38,6 +38,9 @@ extern "C" [[noreturn]] void init()
     uart.print_str("Drop CPU to EL1\r\n");
     Prekernel::drop_to_exception_level_1();
 
+    uart.print_str("Initialize MMU\r\n");
+    Prekernel::init_prekernel_page_tables();
+
     uart.print_str("Enter loop\r\n");
     auto& timer = Prekernel::Timer::the();
     u64 start_musec = 0;

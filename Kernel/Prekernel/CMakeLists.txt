@@ -14,6 +14,7 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
 
         # Preload specific
         Arch/aarch64/init.cpp
+        Arch/aarch64/PrekernelMMU.cpp
         Arch/aarch64/PrekernelExceptions.cpp
         Arch/aarch64/PrekernelCommon.cpp
 
