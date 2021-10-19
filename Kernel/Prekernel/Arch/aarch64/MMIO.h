@@ -25,6 +25,9 @@ public:
     template<class T>
     T volatile* peripheral(FlatPtr offset) { return (T volatile*)peripheral_address(offset); }
 
+    FlatPtr PeripheralBaseAddress() const { return m_base_address; }
+    FlatPtr PeripheralEndAddress() const { return m_base_address + 0x00FFFFFF; }
+
 private:
     MMIO();
 
