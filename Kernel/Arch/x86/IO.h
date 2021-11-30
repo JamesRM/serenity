@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+VALIDATE_IS_X86()
+
 #include <AK/Assertions.h>
 #include <AK/Format.h>
 #include <AK/Types.h>
