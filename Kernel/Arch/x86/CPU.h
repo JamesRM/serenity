@@ -6,6 +6,11 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+#if !ARCH(I386) && !ARCH(X86_64)
+#   error "Trying to include x86 only header on non x86 platform"
+#endif
+
 #include <AK/Atomic.h>
 #include <AK/Concepts.h>
 #include <AK/Vector.h>
