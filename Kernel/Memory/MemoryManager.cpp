@@ -1024,6 +1024,13 @@ void MemoryManager::enter_address_space(AddressSpace& space)
     SpinlockLocker lock(s_mm_lock);
 
     current_thread->regs().cr3 = space.page_directory().cr3();
+
+#error "HERE"
+    // Delete calls to regs().cr3
+    current_thread->regs().set_page_directory(space.page_directory());
+    // Replace write_cr3 with calls to Processor::activate_page_directory
+    Processor::activate_page_directory(space.page_directory());
+
     write_cr3(space.page_directory().cr3());
 }
 
