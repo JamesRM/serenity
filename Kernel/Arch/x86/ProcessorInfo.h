@@ -6,6 +6,10 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+VALIDATE_IS_X86()
+
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/KString.h>
 
