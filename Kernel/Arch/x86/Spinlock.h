@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+VALIDATE_IS_X86()
+
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Locking/LockRank.h>
 
