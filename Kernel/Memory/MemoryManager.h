@@ -24,6 +24,13 @@ namespace Kernel {
 class PageDirectoryEntry;
 }
 
+namespace Kernel::Memory {
+
+constexpr bool page_round_up_would_wrap(FlatPtr x)
+{
+    return x > (explode_byte(0xFF) & ~0xFFF);
+}
+
 struct KmallocGlobalData;
 
 namespace Kernel::Memory {

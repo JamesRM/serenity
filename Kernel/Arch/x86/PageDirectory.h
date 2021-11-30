@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+VALIDATE_IS_X86()
+
 #include <AK/Badge.h>
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
