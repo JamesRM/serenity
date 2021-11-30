@@ -6,9 +6,6 @@
 
 #pragma once
 
-#include <AK/Platform.h>
-VALIDATE_IS_X86()
-
 #include <AK/Badge.h>
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
@@ -86,6 +83,7 @@ public:
     PhysicalPtr physical_page_base() const { return PhysicalAddress::physical_page_base(m_raw); }
     void set_physical_page_base(PhysicalPtr value)
     {
+        // FIXME: IS THIS PLATFORM SPECIFIC?
         m_raw &= 0x8000000000000fffULL;
         m_raw |= PhysicalAddress::physical_page_base(value);
     }
