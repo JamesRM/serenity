@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+VALIDATE_IS_X86()
+
 #include <AK/Types.h>
 #include <LibC/sys/arch/i386/regs.h>
 
