@@ -27,6 +27,8 @@
 #include <LibMain/Main.h>
 
 #include "Mesh.h"
+
+#include "GLTFLoader.h"
 #include "WavefrontOBJLoader.h"
 
 class GLContextWidget final : public GUI::Frame {
@@ -55,6 +57,7 @@ public:
 private:
     GLContextWidget()
         : m_obj_loader(adopt_own(*new WavefrontOBJLoader()))
+        , m_gltf_loader(adopt_own(*new GLTFLoader()))
     {
         constexpr u16 RENDER_WIDTH = 640;
         constexpr u16 RENDER_HEIGHT = 480;
@@ -102,6 +105,7 @@ private:
     RefPtr<Gfx::Bitmap> m_bitmap;
     OwnPtr<GL::GLContext> m_context;
     NonnullOwnPtr<WavefrontOBJLoader> m_obj_loader;
+    NonnullOwnPtr<GLTFLoader> m_gltf_loader;
     GLuint m_init_list { 0 };
     bool m_rotate_x = true;
     bool m_rotate_y = false;
@@ -278,7 +282,18 @@ bool GLContextWidget::load_file(Core::File& file)
         return false;
     }
 
-    auto new_mesh = m_obj_loader->load(file);
+    auto new_mesh = AK::RefPtr<Mesh>();
+
+    if (new_mesh.is_null()) {
+        file.seek(0, Core::SeekMode::SetPosition);
+        new_mesh = m_gltf_loader->load(file);
+    }
+
+    if (new_mesh.is_null()) {
+        file.seek(0, Core::SeekMode::SetPosition);
+        new_mesh = m_obj_loader->load(file);
+    }
+
     if (new_mesh.is_null()) {
         GUI::MessageBox::show(window(), String::formatted("Reading \"{}\" failed.", filename), "Error", GUI::MessageBox::Type::Error);
         return false;
