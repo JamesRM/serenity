@@ -54,7 +54,7 @@ public:
 
 private:
     GLContextWidget()
-        : m_mesh_loader(adopt_own(*new WavefrontOBJLoader()))
+        : m_obj_loader(adopt_own(*new WavefrontOBJLoader()))
     {
         constexpr u16 RENDER_WIDTH = 640;
         constexpr u16 RENDER_HEIGHT = 480;
@@ -101,7 +101,7 @@ private:
     RefPtr<Mesh> m_mesh;
     RefPtr<Gfx::Bitmap> m_bitmap;
     OwnPtr<GL::GLContext> m_context;
-    NonnullOwnPtr<WavefrontOBJLoader> m_mesh_loader;
+    NonnullOwnPtr<WavefrontOBJLoader> m_obj_loader;
     GLuint m_init_list { 0 };
     bool m_rotate_x = true;
     bool m_rotate_y = false;
@@ -278,7 +278,7 @@ bool GLContextWidget::load_file(Core::File& file)
         return false;
     }
 
-    auto new_mesh = m_mesh_loader->load(file);
+    auto new_mesh = m_obj_loader->load(file);
     if (new_mesh.is_null()) {
         GUI::MessageBox::show(window(), String::formatted("Reading \"{}\" failed.", filename), "Error", GUI::MessageBox::Type::Error);
         return false;
