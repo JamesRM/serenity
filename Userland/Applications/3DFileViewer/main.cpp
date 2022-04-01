@@ -267,10 +267,6 @@ bool GLContextWidget::load_path(String const& filename)
 bool GLContextWidget::load_file(Core::File& file)
 {
     auto const& filename = file.filename();
-    if (!filename.ends_with(".obj")) {
-        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: invalid file type", filename), "Error", GUI::MessageBox::Type::Error);
-        return false;
-    }
 
     if (file.is_device()) {
         GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open device files", filename), "Error", GUI::MessageBox::Type::Error);
@@ -283,15 +279,21 @@ bool GLContextWidget::load_file(Core::File& file)
     }
 
     auto new_mesh = AK::RefPtr<Mesh>();
+    auto tried_load = false;
 
-    if (new_mesh.is_null()) {
-        file.seek(0, Core::SeekMode::SetPosition);
+    if (filename.ends_with(".gltf")) {
+        tried_load = true;
         new_mesh = m_gltf_loader->load(file);
     }
 
-    if (new_mesh.is_null()) {
-        file.seek(0, Core::SeekMode::SetPosition);
+    if (filename.ends_with(".obj")) {
+        tried_load = true;
         new_mesh = m_obj_loader->load(file);
+    }
+
+    if (tried_load == false) {
+        GUI::MessageBox::show(window(), String::formatted("File has unknown extension: \"{}\" ", filename), "Error", GUI::MessageBox::Type::Error);
+        return false;
     }
 
     if (new_mesh.is_null()) {
