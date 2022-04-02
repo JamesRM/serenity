@@ -12,11 +12,11 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/DeferredCallEntry.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 #include <Kernel/Arch/x86/ASM_wrapper.h>
 #include <Kernel/Arch/x86/CPUID.h>
 #include <Kernel/Arch/x86/DescriptorTable.h>
-#include <Kernel/Arch/x86/PageDirectory.h>
 #include <Kernel/Arch/x86/TSS.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
@@ -156,6 +156,11 @@ public:
         // NOTE: because this value never changes once all APs are booted,
         // we can safely bypass loading it atomically.
         return *g_total_processors.ptr();
+    }
+
+    ALWAYS_INLINE static u64 read_cpu_counter()
+    {
+        return read_tsc();
     }
 
     ALWAYS_INLINE static void pause()
@@ -396,6 +401,16 @@ public:
     static u32 smp_wake_n_idle_processors(u32 wake_count);
 
     static void deferred_call_queue(Function<void()> callback);
+
+    ALWAYS_INLINE bool has_nx() const
+    {
+        return has_feature(CPUFeature::NX);
+    }
+
+    ALWAYS_INLINE bool has_pat() const
+    {
+        return has_feature(CPUFeature::PAT);
+    }
 
     ALWAYS_INLINE bool has_feature(CPUFeature::Type const& feature) const
     {

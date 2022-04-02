@@ -7,7 +7,10 @@
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
-#include <Kernel/Arch/x86/PageFault.h>
+#include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/PageDirectory.h>
+#include <Kernel/Arch/PageFault.h>
+#include <Kernel/Arch/RegisterState.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/FileSystem/Inode.h>
@@ -77,7 +80,7 @@ UNMAP_AFTER_INIT MemoryManager::MemoryManager()
 
     SpinlockLocker lock(s_mm_lock);
     parse_memory_map();
-    write_cr3(kernel_page_directory().cr3());
+    activate_kernel_page_directory(kernel_page_directory());
     protect_kernel_image();
 
     // We're temporarily "committing" to two pages that we need to allocate below
@@ -104,7 +107,7 @@ UNMAP_AFTER_INIT void MemoryManager::protect_kernel_image()
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
-    if (Processor::current().has_feature(CPUFeature::NX)) {
+    if (Processor::current().has_nx()) {
         // Disable execution of the kernel data, bss and heap segments.
         for (auto const* i = start_of_kernel_data; i < end_of_kernel_image; i += PAGE_SIZE) {
             auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
@@ -466,7 +469,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
             pte.set_physical_page_base(physical_page_array_current_page);
             pte.set_user_allowed(false);
             pte.set_writable(true);
-            if (Processor::current().has_feature(CPUFeature::NX))
+            if (Processor::current().has_nx())
                 pte.set_execute_disabled(false);
             pte.set_global(true);
             pte.set_present(true);
@@ -709,7 +712,7 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
 {
     if (auto* region = kernel_region_from_vaddr(vaddr))
         return region;
-    auto page_directory = PageDirectory::find_by_cr3(read_cr3());
+    auto page_directory = PageDirectory::find_current();
     if (!page_directory)
         return nullptr;
     VERIFY(page_directory->address_space());
@@ -1023,7 +1026,7 @@ void MemoryManager::enter_address_space(AddressSpace& space)
     SpinlockLocker lock(s_mm_lock);
 
     current_thread->regs().cr3 = space.page_directory().cr3();
-    write_cr3(space.page_directory().cr3());
+    activate_page_directory(space.page_directory(), current_thread);
 }
 
 void MemoryManager::flush_tlb_local(VirtualAddress vaddr, size_t page_count)

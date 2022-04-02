@@ -6,6 +6,8 @@
 
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
+#include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Prekernel/Prekernel.h>
@@ -17,20 +19,6 @@ extern u8 start_of_kernel_image[];
 extern u8 end_of_kernel_image[];
 
 namespace Kernel::Memory {
-
-static Singleton<IntrusiveRedBlackTree<&PageDirectory::m_tree_node>> s_cr3_map;
-
-static IntrusiveRedBlackTree<&PageDirectory::m_tree_node>& cr3_map()
-{
-    VERIFY_INTERRUPTS_DISABLED();
-    return *s_cr3_map;
-}
-
-RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
-{
-    SpinlockLocker lock(s_mm_lock);
-    return cr3_map().find(cr3);
-}
 
 UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_page_directory()
 {
@@ -123,7 +111,7 @@ ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(Vi
         MM.unquickmap_page();
     }
 
-    cr3_map().insert(directory->cr3(), directory);
+    register_page_directory(directory);
     return directory;
 }
 
@@ -148,7 +136,7 @@ PageDirectory::~PageDirectory()
 {
     if (is_cr3_initialized()) {
         SpinlockLocker lock(s_mm_lock);
-        cr3_map().remove(cr3());
+        deregister_page_directory(this);
     }
 }
 
