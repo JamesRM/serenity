@@ -7,11 +7,11 @@
 #include <AK/Types.h>
 #include <Kernel/KString.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Sections.h>
+//#include <Kernel/Sections.h>
 
 // init.cpp
 extern size_t __stack_chk_guard;
-READONLY_AFTER_INIT size_t __stack_chk_guard;
+__attribute__((section(".ro_after_init"))) size_t __stack_chk_guard;
 
 // This is a temporary file to get a non-empty Kernel binary on aarch64.
 // The prekernel currently never jumps to the kernel. This is dead code.

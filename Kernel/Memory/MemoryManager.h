@@ -12,6 +12,7 @@
 #include <AK/IntrusiveRedBlackTree.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/String.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AllocationStrategy.h>
@@ -22,6 +23,13 @@
 
 namespace Kernel {
 class PageDirectoryEntry;
+}
+
+namespace Kernel::Memory {
+
+constexpr bool page_round_up_would_wrap(FlatPtr x)
+{
+    return x > (explode_byte(0xFF) & ~0xFFF);
 }
 
 struct KmallocGlobalData;

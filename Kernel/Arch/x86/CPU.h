@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+VALIDATE_IS_X86()
+
 #include <AK/Atomic.h>
 #include <AK/Concepts.h>
 #include <AK/Vector.h>
