@@ -90,9 +90,6 @@ ErrorOr<void> UserOrKernelBuffer::read(void*, size_t, size_t) const
 
 // x86 init
 
-multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
-size_t multiboot_copy_boot_modules_count;
-
 extern "C" {
 READONLY_AFTER_INIT PhysicalAddress start_of_prekernel_image;
 READONLY_AFTER_INIT PhysicalAddress end_of_prekernel_image;

@@ -326,6 +326,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPUID.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Memory.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/PageDirectory.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ProcessorInfo.cpp
@@ -414,6 +415,7 @@ else()
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CrashHandler.cpp        
         Arch/aarch64/MainIdRegister.cpp        
+        Arch/aarch64/Memory.cpp
         Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/Utils.cpp
         Arch/aarch64/init.cpp              

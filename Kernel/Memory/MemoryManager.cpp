@@ -8,6 +8,7 @@
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/Memory.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/RegisterState.h>
@@ -39,9 +40,6 @@ extern u8 start_of_unmap_after_init[];
 extern u8 end_of_unmap_after_init[];
 extern u8 start_of_kernel_ksyms[];
 extern u8 end_of_kernel_ksyms[];
-
-extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
-extern size_t multiboot_copy_boot_modules_count;
 
 // Treat the super pages as logically separate from .bss
 // FIXME: Find a solution so we don't need to expand this range each time
@@ -243,109 +241,8 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) });
 
-    if (multiboot_flags & 0x4) {
-        auto* bootmods_start = multiboot_copy_boot_modules_array;
-        auto* bootmods_end = bootmods_start + multiboot_copy_boot_modules_count;
-
-        for (auto* bootmod = bootmods_start; bootmod < bootmods_end; bootmod++) {
-            m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress(bootmod->start), PhysicalAddress(bootmod->end) });
-        }
-    }
-
-    auto* mmap_begin = multiboot_memory_map;
-    auto* mmap_end = multiboot_memory_map + multiboot_memory_map_count;
-
-    struct ContiguousPhysicalVirtualRange {
-        PhysicalAddress lower;
-        PhysicalAddress upper;
-    };
-
-    Vector<ContiguousPhysicalVirtualRange> contiguous_physical_ranges;
-
-    for (auto* mmap = mmap_begin; mmap < mmap_end; mmap++) {
-        // We have to copy these onto the stack, because we take a reference to these when printing them out,
-        // and doing so on a packed struct field is UB.
-        auto address = mmap->addr;
-        auto length = mmap->len;
-        ArmedScopeGuard write_back_guard = [&]() {
-            mmap->addr = address;
-            mmap->len = length;
-        };
-
-        dmesgln("MM: Multiboot mmap: address={:p}, length={}, type={}", address, length, mmap->type);
-
-        auto start_address = PhysicalAddress(address);
-        switch (mmap->type) {
-        case (MULTIBOOT_MEMORY_AVAILABLE):
-            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_address, length });
-            break;
-        case (MULTIBOOT_MEMORY_RESERVED):
-            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, start_address, length });
-            break;
-        case (MULTIBOOT_MEMORY_ACPI_RECLAIMABLE):
-            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_Reclaimable, start_address, length });
-            break;
-        case (MULTIBOOT_MEMORY_NVS):
-            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_NVS, start_address, length });
-            break;
-        case (MULTIBOOT_MEMORY_BADRAM):
-            dmesgln("MM: Warning, detected bad memory range!");
-            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::BadMemory, start_address, length });
-            break;
-        default:
-            dbgln("MM: Unknown range!");
-            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Unknown, start_address, length });
-            break;
-        }
-
-        if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
-            continue;
-
-        // Fix up unaligned memory regions.
-        auto diff = (FlatPtr)address % PAGE_SIZE;
-        if (diff != 0) {
-            dmesgln("MM: Got an unaligned physical_region from the bootloader; correcting {:p} by {} bytes", address, diff);
-            diff = PAGE_SIZE - diff;
-            address += diff;
-            length -= diff;
-        }
-        if ((length % PAGE_SIZE) != 0) {
-            dmesgln("MM: Got an unaligned physical_region from the bootloader; correcting length {} by {} bytes", length, length % PAGE_SIZE);
-            length -= length % PAGE_SIZE;
-        }
-        if (length < PAGE_SIZE) {
-            dmesgln("MM: Memory physical_region from bootloader is too small; we want >= {} bytes, but got {} bytes", PAGE_SIZE, length);
-            continue;
-        }
-
-        for (PhysicalSize page_base = address; page_base <= (address + length); page_base += PAGE_SIZE) {
-            auto addr = PhysicalAddress(page_base);
-
-            // Skip used memory ranges.
-            bool should_skip = false;
-            for (auto& used_range : m_used_memory_ranges) {
-                if (addr.get() >= used_range.start.get() && addr.get() <= used_range.end.get()) {
-                    should_skip = true;
-                    break;
-                }
-            }
-            if (should_skip)
-                continue;
-
-            if (contiguous_physical_ranges.is_empty() || contiguous_physical_ranges.last().upper.offset(PAGE_SIZE) != addr) {
-                contiguous_physical_ranges.append(ContiguousPhysicalVirtualRange {
-                    .lower = addr,
-                    .upper = addr,
-                });
-            } else {
-                contiguous_physical_ranges.last().upper = addr;
-            }
-        }
-    }
-
-    for (auto& range : contiguous_physical_ranges) {
-        m_user_physical_regions.append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull());
-    }
+    // Platform specific
+    build_physical_memory_map(m_used_memory_ranges, m_physical_memory_ranges, m_user_physical_regions);
 
     // Super pages are guaranteed to be in the first 16MB of physical memory
     VERIFY(virtual_to_low_physical((FlatPtr)super_pages) + sizeof(super_pages) < 0x1000000);
