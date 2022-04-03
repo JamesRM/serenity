@@ -19,6 +19,8 @@
 #include <Kernel/Arch/aarch64/UART.h>
 #include <Kernel/Arch/aarch64/Utils.h>
 
+#include <Kernel/Heap/kmalloc.h>
+
 static void draw_logo();
 static u32 query_firmware_version();
 
@@ -35,6 +37,11 @@ struct TrapFrame {
 extern "C" [[noreturn]] void halt();
 extern "C" [[noreturn]] void init();
 extern "C" void exception_common(TrapFrame const* const trap_frame);
+
+// Defined in the linker script
+typedef void (*ctor_func_t)();
+extern ctor_func_t start_heap_ctors[];
+extern ctor_func_t end_heap_ctors[];
 
 extern "C" [[noreturn]] void init()
 {
@@ -63,6 +70,15 @@ extern "C" [[noreturn]] void init()
     uart.print_str("Initialize MMU\r\n");
     Prekernel::init_prekernel_page_tables();
 
+    // Invoke the constructors needed for the kernel heap
+    uart.print_str("Execute heap ctors\r\n");
+    for (ctor_func_t* ctor = start_heap_ctors; ctor < end_heap_ctors; ctor++)
+        (*ctor)();
+    
+    uart.print_str("Kmalloc init\r\n");
+    kmalloc_init();
+
+    // Display loop
     auto& framebuffer = Prekernel::Framebuffer::the();
     if (framebuffer.initialized()) {
         draw_logo();

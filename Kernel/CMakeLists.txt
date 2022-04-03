@@ -424,7 +424,6 @@ else()
         Arch/aarch64/Dummy.cpp
 
         MiniStdLib.cpp
-        Heap/kmalloc.cpp
 
         Memory/AddressSpace.cpp
         Memory/AnonymousVMObject.cpp
@@ -546,9 +545,8 @@ endif()
 add_compile_definitions(KERNEL)
 add_link_options(LINKER:-z,notext)
 
-if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
-endif()
+add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
+
 add_executable(Kernel ${SOURCES})
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
 
@@ -574,17 +572,13 @@ if (ENABLE_KERNEL_LTO)
     check_ipo_supported()
     add_definitions(-DENABLE_KERNEL_LTO)
     set_property(TARGET Kernel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-    if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-        set_property(TARGET kernel_heap PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-    endif()
+    set_property(TARGET kernel_heap PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
-if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_link_libraries(Kernel PRIVATE kernel_heap gcc)
-    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
-        target_link_libraries(Kernel PRIVATE kernel_heap clang_rt.builtins)
-    endif()
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_libraries(Kernel PRIVATE kernel_heap gcc)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+    target_link_libraries(Kernel PRIVATE kernel_heap clang_rt.builtins)
 endif()
 
 add_custom_command(
